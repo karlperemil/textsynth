@@ -1,0 +1,61 @@
+* {
+  box-sizing:border-box;
+}
+
+.grid1 {
+  width:8.3333%;
+}
+
+.grid2 {
+  width:16.666%;
+}
+
+.grid3 {
+  width:25%;
+}
+
+.grid4 {
+  width:33.333%;
+}
+
+.grid5 {
+  width:41.666%;
+}
+
+.grid6 {
+  width:50%;
+}
+
+.grid7 {
+  width:58.333%;
+}
+
+.grid8 {
+  width:66.666%;
+}
+
+.grid9 { width:75%;}
+
+.grid10 { width:83.333%;}
+
+.grid11 { width:91.666%;}
+
+.grid12 {
+  width:100%;
+}
+
+
+#textform {
+}
+
+#submit-text {
+  border:none;
+}
+
+textarea {
+  width:80%;
+}
+
+button {
+  display: block
+}

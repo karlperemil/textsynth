@@ -59,22 +59,34 @@ $(document).ready(function(){
           for(var m = 0; m < chords[t].length; m++){
             if(chords[t][m] == notes[i]){
               noteMatches.push(t);
+              console.log("found note match in index:" + t);
+            }
+            if(chords[t][m] == notes[i+1]){
+              noteMatches.push(t);
+              console.log("found note match in index:" + t);
+            }
+            if(chords[t][m] == notes[i+2]){
+              noteMatches.push(t);
+              console.log("found note match in index:" + t);
+            }
+            if(chords[t][m] == notes[i+3]){
+              noteMatches.push(t);
+              console.log("found note match in index:" + t);
             }
           }
         }
 
         //figure out which chord has the most matches
         var winner = 0;
-        var score = [0,0,0,0];
+        var score = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
         for(var t = 0; t < noteMatches.length; t++){
           for(var m = 0; m < noteMatches.length; m++){
-            if(t !== m){
-              if(noteMatches[t] == noteMatches[m]){
-                score[t]++;
-              }
+            if(noteMatches[t] == noteMatches[m]){
+              score[t]++;
             }
           }
         }
+        console.log('score =' + score);
         for(var t = 0; t < score.length; t++){
           if(score[t] > winner) winner = score[t];
         }
@@ -123,18 +135,19 @@ $(document).ready(function(){
     };
 
     var intervals = [];
+    
     var interval1 = T("interval", {interval:500}, function(count) {
-      var noteNum  = scaledNotes[count % 32] + 24;
+      var noteNum  = normalizedNotes[count % 32] + 36;
       var velocity = 64 + (count % 64);
       synth.noteOn(noteNum, velocity);
     }).start();
     intervals.push(interval1);
     
     var interval2 = T("interval", {interval:2000}, function(count) {
-      var chordKey1 = guessedChords[count % 8][0] +12;
-      var chordKey2 = guessedChords[count % 8][1] +12;
-      var chordKey3 = guessedChords[count % 8][2] +12;
-      var velocity = 64 + (count % 64);
+      var chordKey1 = chords[guessedChords[count % 8]][0] +36;
+      var chordKey2 = chords[guessedChords[count % 8]][1] +36;
+      var chordKey3 = chords[guessedChords[count % 8]][2] +36;
+      var velocity = 64 + (count % 10)*10;
       synth2.noteOn(chordKey1, velocity);
       synth2.noteOn(chordKey2, velocity);
       synth2.noteOn(chordKey3, velocity);

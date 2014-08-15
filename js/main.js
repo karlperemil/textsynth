@@ -47,6 +47,32 @@ var createSong = function(random){
   var achord = [33,24,26];
   var chords = [cchord,dchord,echord,fchord,fchord,gchord,achord];
 
+  var dictionary = []
+  //[key] = [where,transpose,length]
+  dictionary['b'] = [0,1]
+  dictionary['c'] = [1,1]
+  dictionary['d'] = [2,1]
+  dictionary['f'] = [3,1]
+  dictionary['g'] = [4,1]
+  dictionary['h'] = [5,1]
+  dictionary['j'] = [6,1]
+  dictionary['k'] = [7,1]
+  dictionary['l'] = [8,1]
+  dictionary['m'] = [9,1]
+  dictionary['n'] = [10,1]
+  dictionary['p'] = [11,1]
+  dictionary['q'] = [12,1]
+  dictionary['r'] = [13,1]
+  dictionary['t'] = [14,1]
+  dictionary['v'] = [15,1]
+  dictionary['w'] = [0,2]
+  dictionary['z'] = [1,2]
+  dictionary['x'] = [2,2]
+  dictionary['!'] = [3,2]
+  dictionary['.'] = [4,2]
+  dictionary['?'] = [5,2]
+  dictionary[','] = [6,2]
+
   var midinoteToScale = function(notes){
     for(var i = 0; i < notes.length; i++){
       var isNoteInScale = false;
@@ -144,6 +170,50 @@ var createSong = function(random){
     return notes;
   }
 
+  var generateMelody = function(words){
+    var melody = [];
+    for(var i = 0; i < words.length; i++){
+      melody[i] = [];
+      var modifyNextNote = null
+      var lastNote = null
+      for(var t = 0; t < words[i].length){
+        var currentCharacter = words[i].charAt(t);
+        //is the character a consonant?
+        if(dictionary[currentCharacter] != undefined){
+          // was there a vowel before this consonant?
+          if(lastNote != null){
+            //then 
+            melody[i].push([currentCharacter.charCodeAt(0),0]);
+          }
+          modifyNextNote = dictionary[currentCharacter];
+        }
+        else {
+          // it was a vowel and we create a note
+          lastNote = t;
+          // was the previous character a consonant
+          if(modifyNextNote != null){
+            // it was so we modify the note by the consonant
+            // and add it to our melody
+            var note = currentCharacter.charCodeAt(0);
+            var position = modifyNextNote[0];
+            var repeat = modifyNextNote[1];
+            for(var k = 0; k < repeat; k++){
+              melody[i].push(note,position);
+            }
+            modifyNextNote = null;
+            lastNote = null;
+          }
+          else {
+            // there was no consonant prior to this so we create a basic note
+            var note = currentCharacter.charCodeAt(0);
+            var position = 0;
+            var repeat = 0;
+          }
+        }
+      }
+    }
+  }
+
 
 
   var waves = ["sin", "saw", "tri", "pulse", "fami"]
@@ -155,13 +225,15 @@ var createSong = function(random){
   }
   var text = inputText;
   console.log(text);
+  var words = text.split(/[ ]+/);
+  console.log(words);
   //var hash = text.hashCode();
   var hash = md5(text);
   console.log(String(hash) );
   var splitHash = hash.match(/.{1,1}/g);
   console.log(splitHash);
 
-  var tempoVar = splitHash[0].charCodeAt(0);
+  var tempoVar = text.length;
   console.log(tempoVar);
   var tempo = 80 + (tempoVar%80);
   tempo *= 0.013;

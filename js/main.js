@@ -180,6 +180,7 @@ var createSong = function(random){
   var generatedNotes = splitHash;
   console.log('generatedNotes=' + generatedNotes);
   var sinedNotes = sineNotes(generatedNotes);
+  console.log('sinedNotes=' + sinedNotes);
   var normalizedNotes = normalizeToOctave(sinedNotes);
   console.log('normalizedNotes=' + normalizedNotes);
   var scaledNotes = midinoteToScale(generatedNotes);
@@ -226,6 +227,14 @@ var createSong = function(random){
   var synths = [synthMelody,synthLead,synthChord,synthBase];
 
   intervals = [];
+
+  var intervalAll = t('interval', {interval: 125 / tempo}, function(count){
+    var sixteen = count;
+    var eigth = Math.floor(count/2);
+    var fourth = Math.floor(count/4);
+    var half = Math.floor(count/8);
+    var whole = Math.floor(count/16);
+  }).start();
 
   var intervalMelody = T("interval", {interval:500 / tempo}, function(count) {
     var sixteen = Math.floor(count/8);

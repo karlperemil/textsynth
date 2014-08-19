@@ -48,7 +48,7 @@ var createSong = function(random){
   var chords = [cchord,dchord,echord,fchord,fchord,gchord,achord];
 
   var dictionary = []
-  //[key] = [where,transpose,length]
+  //[key] = [where,repeat]
   dictionary['b'] = [0,1]
   dictionary['c'] = [1,1]
   dictionary['d'] = [2,1]
@@ -73,59 +73,73 @@ var createSong = function(random){
   dictionary['?'] = [5,2]
   dictionary[','] = [6,2]
 
-  var midinoteToScale = function(notes){
+  var randomWords = ['Some','Aids','Ebola','Nyan','Medium','Cats','Dogs','Argentina','Tokyo','Reddit'];
+
+  function midinotesToScale(notes){
     for(var i = 0; i < notes.length; i++){
       var isNoteInScale = false;
       while(!isNoteInScale){
         for(var t = 0; t < scale.length; t++){
           if(notes[i] == scale[t]) isNoteInScale = true;
         }
-        if(!isNoteInScale) notes[i]++;
-        if(notes[i] > 71) notes[i] = 24;
+        if(notes[i] > 71){
+          notes[i] -= 12;
+        }
+        else if(!isNoteInScale){
+          notes[i]++;
+        }
       }
     }
 
     return notes;
   };
 
-  var normalizeToOctave = function(notes){
-    for(var i = 0; i < notes.length; i++){
-      var newNote = notes[i];
-      while(newNote > 35){
-        newNote -= 12;
+  function midinoteToScale(note){
+    var isNoteInScale = false;
+    while(!isNoteInScale){
+      for(var t = 0; t < scale.length; t++){
+        if(note == scale[t]) isNoteInScale = true;
       }
-      notes[i] = newNote;
+      if(note > 47){
+        note -= 12;
+      }
+      else if(!isNoteInScale){
+        note++;
+      }
+    }
+    return note;
+  }
+
+
+
+  function normalizeToOctave(notes){
+    for(var t = 0; t < notes.length; t++){
+      for(var i = 0; i < notes[t].length; i++){
+        var newNote = notes[t][i];
+        while(newNote[0] > 35){
+          newNote[0] -= 12;
+        }
+        notes[t][i] = newNote;
+      }
     }
     return notes;
   }
 
-  var guessChords = function(notes){
+  var guessChords = function(melody){
     var chordMatches = [];
-    var noteMatches = [];
     //match every 4 notes towards a chord. if a match is found the index of that chord is added to noteMatches
-    for(var i = 0; i < notes.length; i+=4){
+    for(var i = 0; i < melody.length; i++){
       var noteMatches = [];
-      for(var t = 0; t < chords.length; t++){
-        for(var m = 0; m < chords[t].length; m++){
-          if(chords[t][m] == notes[i]){
-            noteMatches.push(t);
-            console.log("found note match in index:" + t);
-          }
-          if(chords[t][m] == notes[i+1]){
-            noteMatches.push(t);
-            console.log("found note match in index:" + t);
-          }
-          if(chords[t][m] == notes[i+2]){
-            noteMatches.push(t);
-            console.log("found note match in index:" + t);
-          }
-          if(chords[t][m] == notes[i+3]){
-            noteMatches.push(t);
-            console.log("found note match in index:" + t);
+      for(var y = 0; y < melody[i].length; y++){
+        for(var t = 0; t < chords.length; t++){
+          for(var m = 0; m < chords[t].length; m++){
+            if(chords[t][m] == melody[i][y][0]){
+              noteMatches.push(t);
+              console.log("found note match in index:" + t);
+            }
           }
         }
       }
-
       //figure out which chord has the most matches
       console.log('notematches=' + noteMatches);
       var winner = 0;
@@ -133,11 +147,11 @@ var createSong = function(random){
       var max_value = 0;
       var winner = 0;
       for(var t = 0; t < noteMatches.length; t++){
-        if(freq[noteMatches[t]] != undefined){
-          freq[noteMatches[t]]++;
+        if(freq[noteMatches[t]] == undefined){
+          freq[noteMatches[t]] = 1;
         }
         else {
-          freq[noteMatches[t]] = 1;
+          freq[noteMatches[t]]++;
         }
       }
       for(var key in freq){
@@ -146,7 +160,6 @@ var createSong = function(random){
           winner = key;
         }
       }
-
       chordMatches.push(Number(winner) );
       console.log('winner:' + winner); // chords[index/winner]
     }
@@ -174,52 +187,35 @@ var createSong = function(random){
     var melody = [];
     for(var i = 0; i < words.length; i++){
       melody[i] = [];
-      var modifyNextNote = null
-      var lastNote = null
-      for(var t = 0; t < words[i].length){
-        var currentCharacter = words[i].charAt(t);
-        //is the character a consonant?
-        if(dictionary[currentCharacter] != undefined){
-          // was there a vowel before this consonant?
-          if(lastNote != null){
-            //then 
-            melody[i].push([currentCharacter.charCodeAt(0),0]);
-          }
-          modifyNextNote = dictionary[currentCharacter];
-        }
-        else {
-          // it was a vowel and we create a note
-          lastNote = t;
-          // was the previous character a consonant
-          if(modifyNextNote != null){
-            // it was so we modify the note by the consonant
-            // and add it to our melody
-            var note = currentCharacter.charCodeAt(0);
-            var position = modifyNextNote[0];
-            var repeat = modifyNextNote[1];
-            for(var k = 0; k < repeat; k++){
-              melody[i].push(note,position);
-            }
-            modifyNextNote = null;
-            lastNote = null;
-          }
-          else {
-            // there was no consonant prior to this so we create a basic note
-            var note = currentCharacter.charCodeAt(0);
-            var position = 0;
-            var repeat = 0;
-          }
-        }
+      for(var t = 0; t < words[i].length; t++){
+        var currentCharacter = words[i].charCodeAt(t);
+        var note = midinoteToScale(currentCharacter);
+        melody[i].push(midinoteToScale(currentCharacter));
       }
     }
+    console.log(melody);
+
+    //evenly distribute notes along the bar
+    var melodyWithTempo = [];
+    for(var i = 0; i < melody.length; i++){
+      melodyWithTempo[i] = [];
+      for(var t = 0; t < melody[i].length; t++){
+        var position = Math.floor( (t/melody[i].length) * 16);
+        melodyWithTempo[i].push([melody[i][t],position]);
+      }
+    }
+    return melodyWithTempo;
   }
 
 
 
-  var waves = ["sin", "saw", "tri", "pulse", "fami"]
-  var inputText = $('#textbox').val();
+  var waves = ["sin", "tri", "pulse", "fami","saw"]
+  var inputText = $('#textbox').val().toLowerCase();
   if(random){
-    var randString = String(Math.random());
+    var randString = "";
+    randString += randomWords[Math.round( (randomWords.length-1) * Math.random() )];
+    randString += " ";
+    randString += randomWords[Math.round( (randomWords.length-1) * Math.random() )];
     $('#textbox').val(randString);
     inputText = randString;
   }
@@ -227,6 +223,7 @@ var createSong = function(random){
   console.log(text);
   var words = text.split(/[ ]+/);
   console.log(words);
+  var numBars = words.length;
   //var hash = text.hashCode();
   var hash = md5(text);
   console.log(String(hash) );
@@ -251,14 +248,19 @@ var createSong = function(random){
 
   var generatedNotes = splitHash;
   console.log('generatedNotes=' + generatedNotes);
+
   var sinedNotes = sineNotes(generatedNotes);
   console.log('sinedNotes=' + sinedNotes);
-  var normalizedNotes = normalizeToOctave(sinedNotes);
-  console.log('normalizedNotes=' + normalizedNotes);
-  var scaledNotes = midinoteToScale(generatedNotes);
-  console.log('scaledNotes=' + scaledNotes);
-  var guessedChords = guessChords(scaledNotes);
-  console.log('guessedChords=' + guessedChords);
+
+  var wordMelody = generateMelody(words);
+  console.log('wordMelody=' , wordMelody);
+
+  var normalizedNotes = normalizeToOctave(wordMelody);
+  console.log('normalizedNotes=', normalizedNotes);
+
+  var guessedChords = guessChords(normalizedNotes);
+  console.log('guessedChords=' , guessedChords);
+
   //var leadNoteTimings = setLeadNoteTimings(generatedNotes);
 
   var synthMelody = T("SynthDef").play();
@@ -273,18 +275,21 @@ var createSong = function(random){
   var synthLead = T("SynthDef").play();
   synthLead.def = function(opts) {
     var osc1, osc2, env;
+    var vel = opts.velocity/128
     osc1 = T(waves[(tempoVar+0)%5], {freq:opts.freq , mul:0.25});
     osc2 = T(waves[(tempoVar+1)%5], {freq:opts.freq , mul:0.20});
-    env  = T("linen", {s:250*rand, r:500*rand, lv:0.5}, osc1, osc2);
+    env  = T("linen", {s:250*rand, r:500*rand, lv:0.5 * vel}, osc1, osc2);
     return env.on("ended", opts.doneAction).bang();
   };
 
   var synthChord = T("SynthDef").play();
   synthChord.def = function(opts){
+    var vel = opts.velocity/128;
+    console.log(opts);
     var osc1, osc2, env, chorus;
-    osc1 = T(waves[(tempoVar+2)%5], {freq:opts.freq , mul:0.25});
-    osc2 = T(waves[(tempoVar+3)%5], {freq:opts.freq , mul:0.20});
-    env  = T("linen", {s:1000 * Math.abs(Math.sin(tempoVar)), r:500, lv:0.5}, osc1, osc2);
+    osc1 = T(waves[(tempoVar+2)%5], {freq:opts.freq , mul:0.25*vel});
+    osc2 = T(waves[(tempoVar+3)%5], {freq:opts.freq , mul:0.20*vel});
+    env  = T("linen", {s:400 * Math.abs(Math.sin(tempoVar)), r:200, lv:0.5}, osc1, osc2);
     return env.on("ended", opts.doneAction).bang();
   };
 
@@ -299,21 +304,42 @@ var createSong = function(random){
   var synths = [synthMelody,synthLead,synthChord,synthBase];
 
   intervals = [];
-
-  var intervalAll = t('interval', {interval: 125 / tempo}, function(count){
-    var sixteen = count;
+  var bar = 0;
+  var intervalAll = T('interval', {interval: 125 / tempo}, function(count){
+    bar = Math.floor(count/16)%wordMelody.length;
+    var sixteen = count%16;
     var eigth = Math.floor(count/2);
     var fourth = Math.floor(count/4);
     var half = Math.floor(count/8);
     var whole = Math.floor(count/16);
+    var barMelody = wordMelody[bar];
+    var i;
+    for(i = 0; i < barMelody.length; i++){
+      if(barMelody[i][1] == sixteen){
+        synthMelody.noteOn(barMelody[i][0] + 36, 64);
+      }
+    }
+    var barChord = guessedChords[bar];
+    if(count%8 == 0){
+      //synthChord.noteOn(chords[barChord][0]+ 36, 128);
+      //synthChord.noteOn(chords[barChord][1]+ 36, 128);
+      //synthChord.noteOn(chords[barChord][2]+ 36, 128);
+    }
+    if(count%2 == 0){
+      synthLead.noteOn(chords[barChord][count%3]+ 36, 64);
+    }
+    if(count%4 == 0){
+      synthBase.noteOn(chords[barChord][0] + 24, 64);
+    }
   }).start();
-
+  intervals.push(intervalAll);
+  /*
   var intervalMelody = T("interval", {interval:500 / tempo}, function(count) {
     var sixteen = Math.floor(count/8);
     var skip = false;
     if(scaledNotes[count%32]%2 == 0) skip = true;
     var note = scaledNotes[count%32] + 24 + (tempoVar%2) * 24;
-    var velocity = 12;
+    var velocity = 64;
     if(!skip) synthMelody.noteOn(note + pitch, velocity);
   }).start();
   intervals.push(intervalMelody);
@@ -349,7 +375,7 @@ var createSong = function(random){
     var velocity = 127;
     synthBase.noteOn(chordKey1 + pitch, velocity);
   }).start();
-  intervals.push(intervalBase);
+  intervals.push(intervalBase);*/
 };
 
 

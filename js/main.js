@@ -77,7 +77,7 @@ var createSong = function(random){
   dictionary['?'] = [5,2]
   dictionary[','] = [6,2]
 
-  var randomWords = ['Some','Aids','Ebola','Nyan','Medium','Cats','Dogs','Argentina','Tokyo','Reddit','Pregnant','Something','Bounce','Trap','Hiphop','Magnate','Dinner','4chan','Tennesse','Juggernaut'];
+  var randomWords = ['Political','Aids','Ebola','Yo','Medium','Cats','Dogs','Argentina','Tokyo','Reddit','Pregnant','Something','Bounce','Trap','Hiphop','Magnate','Dinner','4chan','Tennesse','Juggernaut'];
 
   function midinotesToScale(notes){
     for(var i = 0; i < notes.length; i++){
@@ -291,8 +291,9 @@ var createSong = function(random){
   synthLead.def = function(opts) {
     var osc1, osc2, env;
     var vel = opts.velocity/128
-    osc1 = T(waves[(tempoVar+0)%5], {freq:opts.freq , mul:0.25});
+    //osc1 = T(waves[(tempoVar+0)%5], {freq:opts.freq , mul:0.25});
     osc2 = T(waves[(tempoVar+1)%5], {freq:opts.freq , mul:0.20});
+    osc1 = T("pluck", {freq:opts.freq, mul:0.25})
     env  = T("linen", {s:250*rand, r:500*rand, lv:0.5 * vel}, osc1, osc2);
     return env.on("ended", opts.doneAction).bang();
   };
@@ -364,6 +365,14 @@ var createSong = function(random){
     [BD,HH1],
     [HH2],
     [HH1],
+    [BD,HH2],
+    [SD, HH1],
+    [HH2],
+    [HH1],
+    [HH2],
+    [HH1],
+    [HH2],
+    [BD,HH1],
     [HH2],
     [SD, HH1],
     [HH2],
@@ -382,10 +391,27 @@ var createSong = function(random){
     []
   ]
 
-  var drumNotes = [drumNotes1,drumNotes2,drumNotes3];
+  var drumNotes4 = [
+    [BD,HH1,CYM],
+    [HH1],
+    [HH2],
+    [HH1],
+    [SD,BD,HH1],
+    [HH1],
+    [HH2],
+    [HH1]
+  ]
 
-  var drum = T("lowshelf", {freq:110, gain:8, mul:0.6}, BD, SD, HH1, HH2, CYM).play();
+  var drumNotes = [drumNotes1,drumNotes2,drumNotes3,drumNotes4];
 
+  T("lowshelf", {freq:110, gain:8, mul:0.6}, BD, SD, HH1, HH2, CYM).play();
+  T("reverb", {room:0.9, damp:0.4, mix:0.45}, synthMelody, synthChord,SD,HH1,HH2,CYM).play();
+  T("chorus", {delay:20, rate:4, depth:20, fb:0.5, mix:0.3* rand}, synthMelody).play();
+  var pos = T("sin", {freq:0.3, kr:true});
+  T("pan", {pos:-0.3}, synthMelody).play();
+  T("pan", {pos:0.3}, synthLead).play();
+  T("pan", {pos:-0.5}, synthChord).play();
+  T("pan", {pos:0.5}, synthBase).play();
 
   intervals = [];
   var bar = 0;
@@ -420,7 +446,7 @@ var createSong = function(random){
     }
 
     //arpeggio
-    if(count%2 == 0 && totalBars > 7){
+    if(count%2 == 0 && totalBars > 3){
       synthLead.noteOn(chords[barChord][count%3]+ 36 + pitch, 64);
     }
 
@@ -439,6 +465,7 @@ var createSong = function(random){
         p.bang(); 
       });
     }
+    if(count == 0) CYM.bang();
   }).start();
   intervals.push(intervalAll);
 

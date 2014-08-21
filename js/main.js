@@ -9,7 +9,11 @@ String.prototype.hashCode = function() {
   return hash;
 };
 
-var intervals;
+var drums = T("audio").loadthis("/snd/drumkit.wav", function() {
+  console.log('drums loaded');
+});
+
+var intervals = [];
 
 $(document).ready(function(){
   console.log("yo");
@@ -73,7 +77,7 @@ var createSong = function(random){
   dictionary['?'] = [5,2]
   dictionary[','] = [6,2]
 
-  var randomWords = ['Some','Aids','Ebola','Nyan','Medium','Cats','Dogs','Argentina','Tokyo','Reddit'];
+  var randomWords = ['Some','Aids','Ebola','Nyan','Medium','Cats','Dogs','Argentina','Tokyo','Reddit','Pregnant','Something','Bounce','Trap','Hiphop','Magnate','Dinner','4chan','Tennesse','Juggernaut'];
 
   function midinotesToScale(notes){
     for(var i = 0; i < notes.length; i++){
@@ -200,22 +204,29 @@ var createSong = function(random){
     for(var i = 0; i < melody.length; i++){
       melodyWithTempo[i] = [];
       for(var t = 0; t < melody[i].length; t++){
-        var position = Math.floor( (t/melody[i].length) * 16);
+        var position = ((t*4)%16) + (2*Math.floor(t/4));
         melodyWithTempo[i].push([melody[i][t],position]);
       }
     }
     return melodyWithTempo;
   }
 
-
+  function getAverageWordLength(words){
+    var len = 0;
+    for(var i = 0; i < words.length; i++){
+      len += words[i].length;
+    }
+    return len/words.length;
+  }
 
   var waves = ["sin", "tri", "pulse", "fami","saw"]
   var inputText = $('#textbox').val().toLowerCase();
   if(random){
     var randString = "";
     randString += randomWords[Math.round( (randomWords.length-1) * Math.random() )];
-    randString += " ";
-    randString += randomWords[Math.round( (randomWords.length-1) * Math.random() )];
+    randString += " " + randomWords[Math.round( (randomWords.length-1) * Math.random() )];
+    randString += " " + randomWords[Math.round( (randomWords.length-1) * Math.random() )];
+    randString += " " + randomWords[Math.round( (randomWords.length-1) * Math.random() )];
     $('#textbox').val(randString);
     inputText = randString;
   }
@@ -224,6 +235,8 @@ var createSong = function(random){
   var words = text.split(/[ ]+/);
   console.log(words);
   var numBars = words.length;
+  var avgWordLength = getAverageWordLength(words);
+  console.log('Average word length=' + avgWordLength);
   //var hash = text.hashCode();
   var hash = md5(text);
   console.log(String(hash) );
@@ -232,19 +245,28 @@ var createSong = function(random){
 
   var tempoVar = text.length;
   console.log(tempoVar);
-  var tempo = 80 + (tempoVar%80);
+  var tempo = 80 + (1-(avgWordLength/10)) * 80;
+  console.log('Tempo:' + tempo);
   tempo *= 0.013;
 
   var rand = (tempoVar%100) / 100;
   console.log(tempo);
 
-  var pitch = Math.round(rand*6)-6;
+  var pitch = Math.round(rand*11);
   // now 16 pairs of numbers and letters
   for(var i = 0; i < splitHash.length;i++){
     var n = splitHash[i].charCodeAt(0);
     if(n > 71) n -= 40
     splitHash[i] = n;
   }
+
+  var baseLines = [
+    [0,4,8,12],
+    [0,2,4,6,8,10,12,14],
+    [0,8],
+    [0],
+    [0,2,8,10]
+  ]
 
   var generatedNotes = splitHash;
   console.log('generatedNotes=' + generatedNotes);
@@ -265,6 +287,7 @@ var createSong = function(random){
 
   var synthMelody = T("SynthDef").play();
   synthMelody.def = function(opts) {
+    console.log('play melody synth');
     var osc1, osc2, env;
     osc1 = T(waves[(tempoVar+7)%5], {freq:opts.freq , mul:0.25*rand});
     osc2 = T(waves[(tempoVar+8)%5], {freq:opts.freq , mul:0.20});
@@ -285,7 +308,6 @@ var createSong = function(random){
   var synthChord = T("SynthDef").play();
   synthChord.def = function(opts){
     var vel = opts.velocity/128;
-    console.log(opts);
     var osc1, osc2, env, chorus;
     osc1 = T(waves[(tempoVar+2)%5], {freq:opts.freq , mul:0.25*vel});
     osc2 = T(waves[(tempoVar+3)%5], {freq:opts.freq , mul:0.20*vel});
@@ -298,41 +320,93 @@ var createSong = function(random){
     var osc1, osc2, env;
     osc1 = T(waves[(tempoVar+4)%5], {freq:opts.freq , mul:rand});
     osc2 = T(waves[(tempoVar+5)%5], {freq:opts.freq , mul:0.20});
-    env  = T("linen", {s:450, r:250, lv:0.5}, osc1);
+    env  = T("linen", {s:100, r:100, lv:0.5}, osc1);
     return env.on("ended", opts.doneAction).bang();
   };
   var synths = [synthMelody,synthLead,synthChord,synthBase];
 
+  var BD  = drums.slice(   0,  500).set({bang:false, mul:0.6});
+  var SD  = drums.slice( 500, 1000).set({bang:false, mul:0.8});
+  var HH1 = drums.slice(1000, 1500).set({bang:false, mul:0.2});
+  var HH2 = drums.slice(1500, 2000).set({bang:false, mul:0.2});
+  var CYM = drums.slice(2000).set({bang:false, mul:0.2});
+
+  var drumNotes1 = [
+    [BD, HH1],
+    [HH2],
+    [BD,HH1],
+    [HH2],
+    [SD, HH1],
+    [HH2],
+    [HH1],
+    [HH2],
+    [HH1],
+    [HH2],
+    [BD,HH1],
+    [HH2],
+    [SD, HH1],
+    [HH2],
+    [HH1],
+    [HH2]
+  ];
+
+  var drum = T("lowshelf", {freq:110, gain:8, mul:0.6}, BD, SD, HH1, HH2, CYM).play();
+
+
   intervals = [];
   var bar = 0;
-  var intervalAll = T('interval', {interval: 125 / tempo}, function(count){
+  intervalAll = T('interval', {interval: 125 / tempo}, function(count){
     bar = Math.floor(count/16)%wordMelody.length;
+    totalBars = Math.floor(count/16);
     var sixteen = count%16;
     var eigth = Math.floor(count/2);
     var fourth = Math.floor(count/4);
     var half = Math.floor(count/8);
     var whole = Math.floor(count/16);
     var barMelody = wordMelody[bar];
+
+    //melody
     var i;
     for(i = 0; i < barMelody.length; i++){
       if(barMelody[i][1] == sixteen){
-        synthMelody.noteOn(barMelody[i][0] + 36, 64);
+        synthMelody.noteOn(barMelody[i][0] + 36 + pitch, 64);
       }
     }
+
+    //chords
     var barChord = guessedChords[bar];
-    if(count%8 == 0){
-      //synthChord.noteOn(chords[barChord][0]+ 36, 128);
-      //synthChord.noteOn(chords[barChord][1]+ 36, 128);
-      //synthChord.noteOn(chords[barChord][2]+ 36, 128);
+    if(count%8 == 0 && totalBars > 3){
+      synthChord.noteOn(chords[barChord][0]+ 36 + pitch, 32);
+      synthChord.noteOn(chords[barChord][1]+ 36 + pitch, 32);
+      synthChord.noteOn(chords[barChord][2]+ 36 + pitch, 32);
     }
-    if(count%2 == 0){
-      synthLead.noteOn(chords[barChord][count%3]+ 36, 64);
+
+    //arpeggio
+    if(count%2 == 0 && totalBars > 7){
+      synthLead.noteOn(chords[barChord][count%3]+ 36  + pitch, 64);
     }
-    if(count%4 == 0){
-      synthBase.noteOn(chords[barChord][0] + 24, 64);
+
+    //Bass
+    if(totalBars > 7){
+      for(var i = 0; i < baseLines[tempoVar%baseLines.length].length; i++){
+        if(baseLines[tempoVar%baseLines.length][i] == count%16){
+          synthBase.noteOn(chords[barChord][0] + 24  + pitch, 64);
+        }
+      }
+    }
+    //drums
+    if(count%2 == 0 && totalBars > 7){
+      var i = eigth % drumNotes1.length;
+      drumNotes1[i].forEach(function(p) {
+        p.bang(); 
+      });
     }
   }).start();
   intervals.push(intervalAll);
+
+
+
+
   /*
   var intervalMelody = T("interval", {interval:500 / tempo}, function(count) {
     var sixteen = Math.floor(count/8);

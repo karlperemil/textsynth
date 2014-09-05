@@ -9,7 +9,7 @@ String.prototype.hashCode = function() {
   return hash;
 };
 
-var drums = T("audio").loadthis("/snd/drumkit.wav", function() {
+var drums = T("audio").loadthis("snd/drumkit.wav", function() {
   console.log('drums loaded');
 });
 

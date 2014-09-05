@@ -9,12 +9,14 @@
         <h1>Textsynth</h1>
     </div>
     <div id="textform" class="grid12">
-      <textarea class="grid12" id="textbox">Type something cool yo</textarea>
-      <button id="submit-text">Create Song</button>
-      <button id="submit-random">Randomize</button>
-      <button id="stop">Stop</button>
+      <textarea class="grid12" id="textbox" cols="1" rows="1">Type something cool yo</textarea>
     </div>
-    <div>
+    <div class="controls">
+      <button id="submit-text" class="create">Create Song</button>
+      <button id="submit-random" class="randomize">Randomize</button>
+      <button id="stop" class="stop">Stop</button>
+    </div>
+    <div class="examples">
       <p><b>Examples</b></p>
       <p>Bounce Something Trap MAgnate</p>
 
@@ -29,6 +31,9 @@
 
       <p>adament about that thang</p>
     </div>
+    <footer>
+      <p><b>Built with <a href="http://mohayonao.github.io/timbre.js/">Timbre.js</a></b></p>
+    </footer>
     <script type="text/javascript" src="js_ext/jquery.js"></script>
     <script type="text/javascript" src="js_ext/timbre.dev.js"></script>
     <script type="text/javascript" src="js_ext/md5.js"></script>

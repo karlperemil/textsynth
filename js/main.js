@@ -402,7 +402,43 @@ var createSong = function(random){
     [HH1]
   ]
 
-  var drumNotes = [drumNotes1,drumNotes2,drumNotes3,drumNotes4];
+  var drumNotes5 = [
+    [BD],
+    [HH1],
+    [SD],
+    [SD],
+    [BD,HH1],
+    [HH1],
+    [SD],
+    [HH1]
+  ]
+
+  var drumNotes = [drumNotes1,drumNotes2,drumNotes3,drumNotes4,drumNotes5];
+
+  var compositions = [
+    [0],
+    [0],
+    [0],
+    [0],
+    [0,1],
+    [0,1],
+    [0,1],
+    [0,1],
+    [0,1,2,3,4],
+    [0,1,2,3,4],
+    [0,1,2,3,4],
+    [0,4],
+    [5,2,4],
+    [5,2,4],
+    [5,2,4],
+    [5,2,4],
+    [0,1,2,3,4],
+    [0,1,2,3,4],
+    [0,1,2,3,4],
+    [0,1,2,3,4],
+    [5,4],
+    [5,4]
+  ]
 
   T("lowshelf", {freq:110, gain:8, mul:0.6}, BD, SD, HH1, HH2, CYM).play();
   T("reverb", {room:0.9, damp:0.4, mix:0.45}, synthMelody, synthChord,SD,HH1,HH2,CYM).play();
@@ -425,17 +461,35 @@ var createSong = function(random){
     var whole = Math.floor(count/16);
     var barMelody = wordMelody[bar];
 
-    //melody
+
     var i;
-    for(i = 0; i < barMelody.length; i++){
-      if(barMelody[i][1] == sixteen){
-        synthMelody.noteOn(barMelody[i][0] + 36 + pitch, 64);
+    var compositionPart = compositions[totalBars%compositions.length];
+    var playBass = false;
+    var playChords = false;
+    var playMelody = false;
+    var playArpeggio = false;
+    var playDrums = false;
+    for(i = 0; i < compositionPart.length; i++){
+      if(compositionPart[i] == 0) playMelody = true;
+      if(compositionPart[i] == 1) playArpeggio = true;
+      if(compositionPart[i] == 2) playChords = true;
+      if(compositionPart[i] == 3) playBass = true;
+      if(compositionPart[i] == 4) playDrums = true;
+      if(compositionPart[i] == 5) playMelody = true;
+    }
+
+    //melody
+    if(playMelody){
+      for(i = 0; i < barMelody.length; i++){
+        if(barMelody[i][1] == sixteen){
+          synthMelody.noteOn(barMelody[i][0] + 36 + pitch, 64);
+        }
       }
     }
 
     //chords
     var barChord = guessedChords[bar];
-    if(totalBars > 3){
+    if(playChords){
       for(var i = 0; i < chordLines[tempoVar%chordLines.length].length; i++){
         if(chordLines[tempoVar%chordLines.length][i] == count%16){
           synthBase.noteOn(chords[barChord][0] + 36  + pitch, 64);
@@ -446,12 +500,12 @@ var createSong = function(random){
     }
 
     //arpeggio
-    if(count%2 == 0 && totalBars > 3){
+    if(count%2 == 0 && playArpeggio){
       synthLead.noteOn(chords[barChord][count%3]+ 36 + pitch, 64);
     }
 
     //Bass
-    if(totalBars > 7){
+    if(playBass){
       for(var i = 0; i < baseLines[tempoVar%baseLines.length].length; i++){
         if(baseLines[tempoVar%baseLines.length][i] == count%16){
           synthBase.noteOn(chords[barChord][0] + 24  + pitch, 64);
@@ -459,7 +513,7 @@ var createSong = function(random){
       }
     }
     //drums
-    if(count%2 == 0 && totalBars > 7){
+    if(count%2 == 0 && playDrums){
       var i = eigth % drumNotes[tempoVar%drumNotes.length].length;
       drumNotes[tempoVar%drumNotes.length][i].forEach(function(p) {
         p.bang(); 

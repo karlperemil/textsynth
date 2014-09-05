@@ -1,0 +1,24 @@
+extends layout
+
+block content
+  div(id="header", class="grid12")
+    textarea(class="grid12", id="textbox", cols="1", rows="1") type something cool yo
+    div(id="controls")
+      button(id="submit-text", class="create") Create Song
+      button(id="submit-random", class="randomize") Randomize
+      button(id="stop", class="stop")
+    div(class="examples")
+      p
+        b Examples
+      p Bounce Something Trap Magnate
+      p 4chan Magnate Magnate Magnate
+      p sosososo
+      p adament about that thang
+    footer
+      p
+        b
+          | Built with <a href="http://mohayonao.github.io/timbre.js/">Timbre.js
+    script(type="text/javascript" src="js/main.js")
+    script(type="text/javascript" src="js/jquery.js")
+    script(type="text/javascript" src="js/timbre.dev.js")
+    script(type="text/javascript" src="js/md5.js")
